@@ -174,10 +174,6 @@ public abstract class AbstractElasticsearchPublisher<T> implements Runnable {
 		gen.writeStartObject();
 		gen.writeObjectFieldStart("index");
 		gen.writeObjectField("_index", indexPattern.encode(event));
-		String type = settings.getType();
-		if (type != null) {
-			gen.writeObjectField("_type", type);
-		}
 		gen.writeEndObject();
 		gen.writeEndObject();
 	}
