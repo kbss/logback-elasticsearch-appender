@@ -70,4 +70,4 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }} # Pass GPG passphrase as env var to maven-gpg-plugin
         run: |
           mvn --batch-mode clean deploy -P release -DskipTests \
-              -Dgpg.passphrase="${GPG_PASSPHRASE}"
+              -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
