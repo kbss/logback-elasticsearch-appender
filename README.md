@@ -154,3 +154,9 @@ Included is also an Elasticsearch appender for Logback Access. The configuration
 
  * The Appender class name is `com.internetitem.logback.elasticsearch.ElasticsearchAccessAppender`
  * The `value` for each `property` uses the [Logback Access conversion words](http://logback.qos.ch/manual/layouts.html#logback-access).
+
+
+
+Local test
+===========
+`act push --secret-file .secrets -vv -P ubuntu-latest=catthehacker/ubuntu:act-latest`

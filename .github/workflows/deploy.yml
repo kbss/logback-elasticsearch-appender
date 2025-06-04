@@ -3,11 +3,6 @@ name: Publish package to Sonatype OSSRH
 on:
   release: # Trigger the workflow when a new release is created
     types: [published] # Or 'created' depending on your preference
-  # You can also trigger on push to main/master for snapshots,
-  # but be careful with versioning.
-  push:
-    branches:
-      - master
 
 jobs:
   publish:
@@ -30,19 +25,16 @@ jobs:
           server-password: ${{ secrets.OSSRH_TOKEN }} # Environment variable for password/token
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }} # GPG private key from secrets
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }} # GPG passphrase from secrets
-#      - uses: s4u/maven-settings-action@v3.1.0
-#        with:
-#          servers: |
-#            [{
-#              "id": "central",
-#              "configuration": {
-#                "item1": "value1",
-#                "item2": {
-#                  "item21": "value21",
-#                  "item22": "value22"
-#                }
-#              }
-#            }]
+
+      - uses: s4u/maven-settings-action@v3.1.0
+        with:
+          servers: |
+            [{
+              "id": "central",
+              "username": "${{ secrets.OSSRH_USERNAME }}",
+              "password": "${{ secrets.OSSRH_TOKEN }}"
+            }]
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
