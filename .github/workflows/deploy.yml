@@ -25,12 +25,24 @@ jobs:
         with:
           java-version: '8' # Or your project's Java version
           distribution: 'temurin' # Or 'adopt', 'zulu', etc.
-          server-id: ossrh # Matches the <id> in your settings.xml / distributionManagement
+          server-id: central # Matches the <id> in your settings.xml / distributionManagement
           server-username: ${{ secrets.OSSRH_USERNAME }} # Environment variable for username
           server-password: ${{ secrets.OSSRH_TOKEN }} # Environment variable for password/token
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }} # GPG private key from secrets
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }} # GPG passphrase from secrets
-
+#      - uses: s4u/maven-settings-action@v3.1.0
+#        with:
+#          servers: |
+#            [{
+#              "id": "central",
+#              "configuration": {
+#                "item1": "value1",
+#                "item2": {
+#                  "item21": "value21",
+#                  "item22": "value22"
+#                }
+#              }
+#            }]
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
