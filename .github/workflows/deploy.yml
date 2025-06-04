@@ -1,28 +1,61 @@
-name: Java CI with Maven and Publish to GitHub Packages
+name: Publish package to Sonatype OSSRH
 
 on:
-  push:
-    branches: [ master ]
+  release: # Trigger the workflow when a new release is created
+    types: [published] # Or 'created' depending on your preference
+  # You can also trigger on push to main/master for snapshots,
+  # but be careful with versioning.
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write # Required to write packages
+      contents: read # Needed to check out the repository
+      packages: write # Potentially needed if you interact with GitHub Packages as well, though not directly for OSSRH
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '8'
-          distribution: 'temurin'
-          server-id: github
+          java-version: '8' # Or your project's Java version
+          distribution: 'temurin' # Or 'adopt', 'zulu', etc.
+          server-id: ossrh # Matches the <id> in your settings.xml / distributionManagement
+          server-username: ${{ secrets.OSSRH_USERNAME }} # Environment variable for username
+          server-password: ${{ secrets.OSSRH_TOKEN }} # Environment variable for password/token
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }} # GPG private key from secrets
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }} # GPG passphrase from secrets
 
-      - name: Publish to GitHub Packages
-        run: mvn --batch-mode deploy -DskipTests
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Get the version from the release tag
+        id: get_version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        # If your tag includes a 'v' prefix (e.g., v1.0.0), you might need to strip it:
+        # run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Update project version
+        # This step ensures the version in pom.xml matches the release tag.
+        # Useful if you don't manually update pom.xml before tagging.
+        # Be careful if your pom.xml versioning is complex.
+        run: mvn versions:set -DnewVersion=${{ env.RELEASE_VERSION }} -DgenerateBackupPoms=false
+
+      - name: Publish to Sonatype OSSRH
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }} # Pass GPG passphrase as env var to maven-gpg-plugin
+        run: |
+          mvn --batch-mode clean deploy -P release -DskipTests \
+              -Dgpg.passphrase="${GPG_PASSPHRASE}"
